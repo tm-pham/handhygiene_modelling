@@ -51,7 +51,7 @@ lognormal.times <- function(t_end, c_mean, c_sd){
 # t_end = Time period (default: 24 hours)
 # eps = Probability of transmission per contact
 # HW = Option for hand washing frequency (1=fixed regular times, 2=exponential)
-# For HW=1: t_reg =
+# For HW=1: t_reg = regular, fixed times between hand washing
 # For HW=2: hw_mean = mean for exponential distribution of hand washing times
 # CT = Option for distribution of carriage duration
 # =============================================================================== #
@@ -145,7 +145,6 @@ for(i in 1:length(dc)){
   eps[i] <- compute.eps(t_end=24,c_mean=1,f_rate=11,halflife=dc[i], SAR=0.5, seed=12345)
   p <- household.fun(hh_num=1, HW=0, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$v
   meanP[i] <- mean(p)
-  # probTrans[i] <- eps[i]*mean(p)
 }
 
 plot(dc, eps, 
@@ -157,35 +156,33 @@ plot(dc, eps,
 #      xlab="Half life of probability \n of contamination (hours)", ylab="Probability of persistence",
 #      main="No hand washing \n SAR=0.5")
 
-
-# With hand washing
-# how transmission prob in a 2 person household changes with hand hygiene frequency as a 
-# function of duration of contamination (but where parameters are constrained to give the 
-# same secondary attack rate in the absence of hand hygiene)
+# =============================================================================== #
+# how transmission prob in a 2 person household changes with hand hygiene 
+# frequency as a function of duration of contamination (but where parameters are 
+# constrained to give the same secondary attack rate in the absence of hand hygiene)
+# =============================================================================== #
 # hw <- c(1,2,3,6,12,15,20)
 hw <- c(1,2,4,8,16)
 dc <- seq(1,24)
-data <- NULL
+data <- dataInf <- NULL
 for(h in hw){
-  eps <- probTrans <- meanP <- rep(0,length(dc))
+  eps <- probTrans <- meanP <- pInf <- rep(0,length(dc))
   for(i in 1:length(dc)){
     eps[i] <- compute.eps(t_end=24,c_mean=1,f_rate=11,halflife=dc[i], seed=12345)
-    p <- household.fun(hh_num=1, HW=1,hw_mean=h, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$v
-    meanP[i] <- mean(p)
-    probTrans[i] <- mean(eps[i]*p)
+    pInf[i] <- household.fun(hh_num=1, HW=1,hw_mean=h, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$p_inf
   }
-  data <- cbind(data, probTrans)
+  dataInf <- cbind(dataInf, pInf)
 }
 
-data <- as.data.frame(data)
-colnames(data) <- 1:ncol(data)
-rownames(data) <- 1:nrow(data)
-data %>% gather() %>% group_by(key) %>% 
+dataInf <- as.data.frame(dataInf)
+colnames(dataInf) <- 1:ncol(dataInf)
+rownames(dataInf) <- 1:nrow(dataInf)
+dataInf %>% gather() %>% group_by(key) %>% 
   mutate(x=1:n()) %>%
   ggplot(aes(x=x, y=value,group=key,color=key)) + 
   geom_line() +
   xlab("Half life of probability of persistence(hours)") + 
-  ylab("Mean probability of transmission") + 
+  ylab("Cumulative probability of infection") + 
   scale_color_discrete(name="Hand hygiene frequency \nEvery .. hours",
                        labels=hw)
 
@@ -228,3 +225,4 @@ dataSens %>% gather() %>% group_by(key) %>%
   ylab("Proportion of transmission events") + 
   scale_color_discrete(name="Distribution",
                        labels=c("Uniform","Exponential","Lognormal"))
+
