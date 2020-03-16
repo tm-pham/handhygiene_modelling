@@ -152,10 +152,6 @@ plot(dc, eps,
      ylab="Probability of transmission per contact",
      main="No hand washing \n SAR=0.5")
 
-# plot(dc, meanP, 
-#      xlab="Half life of probability \n of contamination (hours)", ylab="Probability of persistence",
-#      main="No hand washing \n SAR=0.5")
-
 # =============================================================================== #
 # how transmission prob in a 2 person household changes with hand hygiene 
 # frequency as a function of duration of contamination (but where parameters are 
