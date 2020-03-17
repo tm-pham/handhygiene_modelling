@@ -175,7 +175,7 @@ for(h in hw){
   eps <- probTrans <- meanP <- pInf <- rep(0,length(dc))
   for(i in 1:length(dc)){
     eps[i] <- compute.eps(t_end=24*infPeriod,c_mean=1,f_rate=11,halflife=dc[i], seed=12345)
-    pInf[i] <- household.fun(t_end=24*infPeriod,hh_num=1, HW=1,hw_mean=h, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$p_inf
+    pInf[i] <- household.fun(t_end=24*infPeriod,HW=1,hw_mean=h, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$p_inf
   }
   dataInf <- cbind(dataInf, pInf)
 }
@@ -242,3 +242,5 @@ propTransMat %>% gather() %>% group_by(key) %>%
   # scale_x_discrete(breaks=xaxis, labels=as.character(xaxis)) + 
   scale_color_discrete(name="Half life of probability \nof persistence (minutes)",
                        labels=as.character(dc*60))
+
+
