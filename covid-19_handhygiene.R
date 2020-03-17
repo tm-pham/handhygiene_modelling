@@ -153,12 +153,12 @@ dc <- seq(1,30)/60 # Persistence of virus on hands (per hour)
 eps <- probTrans <- meanP <- rep(0,length(dc))
 for(i in 1:length(dc)){
   eps[i] <- compute.eps(t_end=24*infPeriod,c_mean=1,f_rate=11,halflife=dc[i], SAR=0.5, seed=12345)
-  p <- household.fun(t_end=24*infPeriod,hh_num=1, HW=0, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$v
+  p <- household.fun(t_end=24*infPeriod, HW=0, f_rate=11, eps=eps[i], halflife=dc[i],seed=12345)$v
   meanP[i] <- mean(p)
 }
 
 plot(dc, eps, 
-     xlab="Half life of probability \n of contamination (hours)", 
+     xlab="Half life of probability \n of persistence (hours)", 
      ylab="Probability of transmission per contact",
      main="No hand washing \n SAR=0.5")
 
