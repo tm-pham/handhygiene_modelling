@@ -161,15 +161,14 @@ compute.eps <- function(t_end,c_mean,f_rate=10,halflife, SAR=0.5, seed=NULL){
       v[i] <- exp(-d_rate*(t_f[i]-last))
     }
   }
-  return(-log(SAR)/sum(v))
+  return(-log(1-SAR)/sum(v))
 }
 
 
 
 # Sensitivity analysis for different secondary attack rates
-plot.transPerContact.SAR <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,f_rate=10,
+sens.transPerContact.SAR <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,f_rate=10,
                                      sar_vec=c(0.15, 0.25, 0.5, 0.75),
-                                     legend_sar=c("15%","25%","50%","75%"),
                                      seed=12345){
   epsMat <- data.frame(matrix(rep(0,length(dc)*4),nrow=4,ncol=length(dc)))
   for(j in 1:length(sar_vec)){
@@ -181,31 +180,14 @@ plot.transPerContact.SAR <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,f_rat
   colnames(epsMat) <- 1:ncol(epsMat)
   rownames(epsMat) <- 1:nrow(epsMat)
   
-  p <- epsMat %>% gather() %>% group_by(key) %>% 
-    mutate(x=1:n()) %>%
-    ggplot(aes(x=x, y=value,group=key,color=key)) + 
-    geom_line() +
-    xlab("Half-life of probability of persistence (minutes)") + 
-    ylab("Probability of transmission per contact") + 
-    # scale_x_discrete(breaks=xaxis, labels=as.character(xaxis)) + 
-    scale_color_discrete(name="SAR",labels=legend_sar) + 
-    theme(axis.title.x = element_text(size=25),
-          axis.title.y = element_text(size=25),
-          axis.text.x = element_text(size=20),
-          axis.text.y = element_text(size=20),
-          legend.text = element_text(size=20),
-          legend.title = element_text(size=25)) + 
-    theme_bw()
-  
-  return(p)
+  return(epsMat)
 }
 
 
 # Sensitivity analysis for mean times between hand contamination events
-plot.transPerContact.cont <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,SAR=0.5,
+sens.transPerContact.cont <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,SAR=0.5,
                                       f_rate=10,
                                       c_vec=c(1/4,1/2,1,2,4,8,16),
-                                      legend_c=c("15 min","30 min","1","2","4","8","16"),
                                       seed=12345){
   epsMatC <- data.frame(matrix(rep(0,length(dc)),ncol=length(dc)))
   for(j in 1:length(c_vec)){
@@ -217,21 +199,54 @@ plot.transPerContact.cont <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,SAR=
   colnames(epsMatC) <- 1:ncol(epsMatC)
   rownames(epsMatC) <- 1:nrow(epsMatC)
   
-  
-  epsMatC %>% gather() %>% group_by(key) %>% 
+  return(epsMatC)
+}
+
+
+sar.hw <- function(dc=seq(1,30)/60, 
+                   hw=c(5/60,15/60,0.5,1,2,4,8,16), 
+                   f_rate=10, 
+                   infPeriod=12, 
+                   c_mean=1, 
+                   SAR.nohw=0.5,
+                   HW.opt=1){
+  dataInf <- NULL
+  for(h in hw){
+    eps <- probTrans <- meanP <- pInf <- rep(0,length(dc))
+    for(i in 1:length(dc)){
+      eps[i] <- compute.eps(t_end=24*infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=dc[i],SAR=SAR.nohw, seed=12345)
+      if(HW.opt%in%c(1,2)){
+        pInf[i] <- household.fun(t_end=24*infPeriod,HW=HW.opt,hw_mean=h,f_rate=f_rate,eps=eps[i],halflife=dc[i],seed=12345)$p_inf
+        
+      }else{
+        pInf[i] <- household.fun(t_end=24*infPeriod,HW=HW.opt,t_delay=h,f_rate=f_rate,eps=eps[i],halflife=dc[i],seed=12345)$p_inf
+      }
+    }
+    dataInf <- cbind(dataInf, pInf)
+  }
+  return(dataInf)
+}
+
+
+plot.fun <- function(df, x.title, y.title, legend.title, legend.labels, 
+                     axis.title.x.size=17, axis.title.y.size=17, 
+                     axis.text.x.size=15, axis.text.y.size=15,
+                     legend.text.size=12, legend.title.size=13){
+  p <- df %>% gather() %>% group_by(key) %>% 
     mutate(x=1:n()) %>%
     ggplot(aes(x=x, y=value,group=key,color=key)) + 
     geom_line() +
-    xlab("Half-life of probability of persistence (minutes)") + 
-    ylab("Probability of transmission per contact") + 
+    xlab(x.title) + 
+    ylab(y.title) + 
     # scale_x_discrete(breaks=xaxis, labels=as.character(xaxis)) + 
-    scale_color_discrete(name="Average time between \nhand contamination events",
-                         labels=legend_c) + 
-    theme(axis.title.x = element_text(size=25),
-          axis.title.y = element_text(size=25),
-          axis.text.x = element_text(size=20),
-          axis.text.y = element_text(size=20),
-          legend.text = element_text(size=20),
-          legend.title = element_text(size=25)) + 
-    theme_bw()
+    scale_color_discrete(name=legend.title,
+                         labels=legend.labels) + 
+    theme_bw()+
+    theme(axis.title.x = element_text(size=axis.title.x.size),
+          axis.title.y = element_text(size=axis.title.y.size),
+          axis.text.x = element_text(size=axis.text.x.size),
+          axis.text.y = element_text(size=axis.text.y.size),
+          legend.text = element_text(size=legend.text.size),
+          legend.title = element_text(size=legend.title.size))
+  return(p)
 }
