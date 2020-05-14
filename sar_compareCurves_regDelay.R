@@ -1,8 +1,9 @@
 #==============================================#
 library(reshape)
 
-plotPath <- "/home/thi.mui.pham/nextcloud/PHD/Oxford/Covid-19/Figures/"
-load(paste0(dataPath, "sar_hw_RegDelaySAR50C4HalfDay.RData"))
+dataPath <- "/home/thi.mui.pham/covid-19/handhygiene/modelling/code/"
+plotPath <- "/home/thi.mui.pham/covid-19/handhygiene/modelling/figures/"
+load(paste0(dataPath, "sar_hw_RegDelaySAR10C4HalfDay.RData"))
 
 dfReg <- data$dfReg
 dfDelay <- data$dfDelay
@@ -76,30 +77,26 @@ gc <- arrangeGrob(pc1,pc2,pc3,pc4,ncol=2)
 ggsave(file=paste0(plotPath,"sar50C4_compareCurves_regDelay_halfday.pdf"),gc, height=9,width=18)
 
 
-
-
-
-num_hw_reg <- (data$dataInf)$num_hw
-num_hw_delay <- (data$dataInfDel)$num_hw
-numReg <- as.data.frame(cbind(freq=c(5,15,30,60,240,480),num_hw_reg/(24*0.5)))
-numDelay <- as.data.frame(cbind(freq=c(1,5,15,30,60,240),num_hw_delay/(24*0.5)))
-num <- merge(numReg,numDelay,by="freq"); colnames(num) <- c("freq","Fixed","Delayed")
-numMelted <- reshape::melt(num,id.var="freq")
-pNum <- ggplot(numMelted, aes(y=value, fill=variable, x=as.factor(freq))) +
-          geom_bar(position="dodge", stat="identity") + 
-          theme_bw() + 
-          xlab("Hand washing interval/delay (minutes)") + 
-          ylab("Average number of hand washes per hour") + 
-          theme_bw() +
-          theme(axis.title.x = element_text(size=35),
-                axis.title.y = element_text(size=35),
-                axis.text.x = element_text(size=25),
-                axis.text.y = element_text(size=25),
-                legend.text = element_text(size=27),
-                legend.title = element_text(size=30),
-                legend.position = "right") +
-          scale_fill_discrete(labels=c("Fixed","Delayed"),
-                              name="Hand washing") 
-  
-
-pNum
+# num_hw_reg <- (data$dataInf)$num_hw
+# num_hw_delay <- (data$dataInfDel)$num_hw
+# numReg <- as.data.frame(cbind(freq=c(5,15,30,60,240,480),num_hw_reg/(24*0.5)))
+# numDelay <- as.data.frame(cbind(freq=c(1,5,15,30,60,240),num_hw_delay/(24*0.5)))
+# num <- merge(numReg,numDelay,by="freq"); colnames(num) <- c("freq","Fixed","Delayed")
+# numMelted <- reshape::melt(num,id.var="freq")
+# pNum <- ggplot(numMelted, aes(y=value, fill=variable, x=as.factor(freq))) +
+#           geom_bar(position="dodge", stat="identity") + 
+#           theme_bw() + 
+#           xlab("Hand washing interval/delay (minutes)") + 
+#           ylab("Average number of hand washes per hour") + 
+#           theme_bw() +
+#           theme(axis.title.x = element_text(size=35),
+#                 axis.title.y = element_text(size=35),
+#                 axis.text.x = element_text(size=25),
+#                 axis.text.y = element_text(size=25),
+#                 legend.text = element_text(size=27),
+#                 legend.title = element_text(size=30),
+#                 legend.position = "right") +
+#           scale_fill_discrete(labels=c("Fixed","Delayed"),
+#                               name="Hand washing") 
+#   
+# pNum
