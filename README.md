@@ -1,7 +1,7 @@
 # The potential impact of intensified community hand hygiene interventions on respiratory tract infections: A Modelling Study
 Thi Mui Pham<sup>1,2</sup>, Yin Mo<sup>1,3,4,5</sup>, Ben S. Cooper<sup>1,3</sup>
 
-<sup>1</sup> Centre for Tropical Medicine and Global Health, Nuffield Department of Medicine, University of Oxford, Oxford, United Kingdom;
+<sup>1</sup> Centre for Tropical Medicine and Global Health, Nuffield Department of Medicine, University of Oxford, Oxford, United Kingdom;\\
 \noindent \textsuperscript{2} Julius Center for Health Sciences and Primary Care of the UMC Utrecht, Utrecht University, Utrecht, The Netherlands;
 \noindent \textsuperscript{3} Mahidol-Oxford Tropical Medicine Research Unit, Mahidol University, Bangkok, Thailand;
 \noindent \textsuperscript{4} Division of Infectious Diseases, Department of Medicine, National University Hospital, Singapore;
