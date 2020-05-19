@@ -4,15 +4,86 @@
 rm(list=ls())
 # Packages
 library(ggplot2);library(tidyr);library(dplyr); library(gridExtra)
-library(grid); library(plotly); library(hrbrthemes)
+library(grid);
 
 # Set your working directory here:
-dataPath <- "/home/thi.mui.pham/ownCloud/PHD/Oxford/covid-19/handhygiene/R/"
-setwd(dataPath)
-plotPath <- "/home/thi.mui.pham/ownCloud/PHD/Oxford/covid-19/handhygiene/figures/"
+dataPath <- "/home/thi.mui.pham/covid-19/handhygiene/modelling/code/"
+plotPath <- "/home/thi.mui.pham/covid-19/handhygiene/modelling/figures/"
 
 # Load functions
-source("covid-19_handhygiene_functions.R")
+source(paste0(dataPath,"covid-19_handhygiene_functions.R"))
+
+infPeriod <- 12
+c_mean <- 1/4
+f_rate <- 10
+hl1 <- 5.4/60; hl2 <- 36.1/60
+sarNoHW <- 0.1
+seed <- 100
+
+eps <- compute.eps(t_end=infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=hl1,SAR=sarNoHW, seed=seed)
+eps
+test <- household.fun(t_end=infPeriod, 
+                      CT=2, 
+                      c_mean=c_mean, 
+                      halflife=hl1, 
+                      hw_mean = 7.5/60, 
+                      eps=eps, seed=100)
+test$p_inf
+
+eps2 <- compute.eps(t_end=infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=hl2,SAR=sarNoHW, seed=seed)
+test2 <- household.fun(t_end=infPeriod, 
+                       CT=2, 
+                       c_mean=c_mean, 
+                       halflife=hl2, 
+                       hw_mean = 15/60, 
+                       eps = eps2, seed=100)
+test2$p_inf
+
+summary(test$t_exp)
+summary(test2$t_exp)
+
+par(mfrow=c(1,2))
+boxplot(test$t_exp)
+boxplot(test2$t_exp)
+
+sum(test$t_exp)
+sum(test2$t_exp)
+
+View(cbind(test$v, test2$v))
+
+eps <- compute.eps(t_end=infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=hl1,SAR=sarNoHW, seed=seed)
+test <- household.fun(t_end=infPeriod, 
+                      CT=2, 
+                      c_mean=c_mean, 
+                      halflife=hl1, 
+                      HW=0,
+                      eps=eps, seed=100)
+
+eps2 <- compute.eps(t_end=infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=hl2,SAR=sarNoHW, seed=seed)
+test2 <- household.fun(t_end=infPeriod, 
+                       CT=2, 
+                       c_mean=c_mean, 
+                       halflife=hl2, 
+                       HW=0, 
+                       eps = eps2, seed=100)
+test$p_inf
+test2$p_inf
+sum(test$t_exp)
+sum(test$t_exp)
+
+hl3 <- 1/60
+eps3 <- compute.eps(t_end=infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=hl3,SAR=sarNoHW, seed=seed)
+test3 <- household.fun(t_end=infPeriod, 
+                       CT=2, 
+                       c_mean=c_mean, 
+                       halflife=hl3, 
+                       hw_mean = 2/60, 
+                       eps = eps3, seed=100)
+test3$p_inf
+
+summary(test$t_exp)
+summary(test2$t_exp)
+summary(test3$t_exp)
 
 # =============================================================================== #
 # What does model predict about relationship between hand contamination rate,
@@ -20,7 +91,6 @@ source("covid-19_handhygiene_functions.R")
 # meta-regression which is RR of infection per day associated with one hand 
 # hygiene event)
 # =============================================================================== #
-
 infPeriod <- 0.5
 sarNoHW <- 0.01
 hl1 <- 5.4; hl2 <- 36.1
@@ -79,148 +149,7 @@ red[,60]
 
 
 
-# =============================================================================== #
-# how transmission prob in a 2 person household changes with hand hygiene 
-# frequency as a function of duration of contamination (but where parameters are 
-# constrained to give the same secondary attack rate in the absence of hand hygiene)
-# =============================================================================== #
 
-start_time <- Sys.time()
-
-infPeriod <- 0.5
-sarNoHW <- 0.01
-hl1 <- 5.4; hl2 <- 36.1
-# Regular fixed hand washing
-dataInf <- sar.hw(dc=seq(1,60)/60,
-                  hw=1, 
-                  # hw=c(5/60,15/60,0.5,1,2,4,6), 
-                  f_rate=10, 
-                  infPeriod=infPeriod, 
-                  c_mean=1, 
-                  SAR.nohw=sarNoHW,
-                  HW.opt=1, seed=100,it=100)
-dfReg <- dataInf$dataInf
-(num_hw_reg <- dataInf$num_hw)/(24*infPeriod)
-num_hw_reg
-head(dfReg)
-
-# Event-prompted hand washing
-dataInfDel <- sar.hw(dc=seq(1,60)/60, 
-                     # hw=c(1/60,5/60,15/60,45/60,1,2,6), 
-                     hw=c(1/60,5/60,15/60,1,1.25,2,3.25,6),
-                     f_rate=10, 
-                     infPeriod=0.5, 
-                     c_mean=1, 
-                     SAR.nohw=sarNoHW,
-                     HW.opt=3, seed=100,it=100)
-dfDelay <- dataInfDel$dataInf
-(num_hw_delay <- dataInfDel$num_hw)/(24*infPeriod)
-num_hw_delay
-dfDelay[36,]
-
-data <- list(dfReg=dfReg, dfDelay=dfDelay, dataInf=dataInf, dataInfDel=dataInfDel)
-save(data, file=paste0(dataPath, "sar_hw_RegDelaySAR10C60HalfDay.RData"))
-
-end_time <- Sys.time()
-end_time-start_time
-
-
-load(paste0(dataPath, "sar_hw_RegDelaySAR50C60HalfDay.RData"))
-dfReg <- data$dfReg
-dfDelay <- data$dfDelay
-num_hw_reg <- (data$dataInf)$num_hw
-num_hw_delay <- (data$dataInfDel)$num_hw
-
-
-# PLOTS
-# legendReg <- c("5 min", "15 min", "30 min", "1 hour", "2 hours", "4 hours","6 hours")
-legendReg <- c("1 hour","1.5 hours", "2 hours","3 hours","3.5 hours","4 hours","6 hours")
-pReg <- plot.fun(dfReg,
-                 x.title = "Half-life of probability of persistence (minutes)", 
-                 y.title = "Probability of infection",
-                    legend.title = "Hand washing \ntime interval", 
-                    legend.position = "bottom",
-                    line.size=1.25)
-colReg <- c("darkgoldenrod1","darkorange1","coral3","darkred","lightpink","orchid","purple3","midnightblue")
-y.pos <- 0.08
-text.col <- "gray21"
-verticalText1 <- grobTree(textGrob(bquote("H3N2 (2"~mu*"L)"), x=0.14,  y=y.pos, hjust=0,
-                          gp=gpar(col=text.col, fontsize=18, fontface="italic")))
-verticalText2 <- grobTree(textGrob(bquote("H3N2 (30"~mu*"L)"), x=0.605,  y=y.pos, hjust=0,
-                                  gp=gpar(col=text.col, fontsize=18, fontface="italic")))
-plotReg <- pReg + 
-           geom_vline(xintercept = hl1, linetype="dashed") +
-           geom_vline(xintercept = hl2, linetype="dashed") +
-           labs(title="A") + 
-           theme(plot.title = element_text(hjust=-0.1, size=20, face="bold")) +
-           scale_color_manual(values=colReg, labels=legendReg,
-                               name="Hand washing \ntime interval") + 
-           scale_y_continuous(limit=c(0.009,sarNoHW),breaks=c(seq(0,sarNoHW, by = 0.001),sarNoHW)) +
-           scale_x_continuous(limit=c(0.,60),breaks=seq(0,60, by = 10)) +
-           annotation_custom(verticalText1) + 
-           annotation_custom(verticalText2)
-plotReg 
-
-
-legendDelay <- c("1 min","5 min","15 min", "45 min", "1 hour","2 hours","3 hours","4 hours")
-colDelay <- c("lightblue","deepskyblue","blue4","royalblue","turquoise3","lightgreen","green4","darkgreen")
-pDelay <- plot.fun(dfDelay,
-                      x.title = "Half-life of probability of persistence (minutes)", 
-                      y.title = "",
-                      legend.title = "Delay of hand \n washing after \ncontamination", 
-                      legend.labels = c("1 min","5 min", "15 min", "30 min", "1 hour","2 hours","4 hours"),
-                      legend.position = "bottom", 
-                      line.size=1.25)
-
-
-plotDelay <- pDelay + 
-              geom_vline(xintercept = hl1, linetype="dashed") +
-              geom_vline(xintercept = hl2, linetype="dashed") +
-              labs(title="B") +
-              theme(plot.title = element_text(hjust=-0.1, size=20, face="bold")) +
-              scale_color_manual(values=colDelay, 
-                                 labels=legendDelay,
-                                 name="Hand washing delay \nafter contamination", 
-                                 guide=guide_legend(nrow = 2, ncol=4)) +
-              scale_y_continuous(limit=c(0.,sarNoHW+0.002), breaks=c(seq(0,sarNoHW, by = 0.005),sarNoHW)) +
-              scale_x_continuous(limit=c(0.,60),breaks=seq(0,60, by = 10)) +
-              annotation_custom(verticalText1) + 
-              annotation_custom(verticalText2)
-plotDelay
-# round(min(dfDelay),2)
-
-grid.arrange(plotReg,plotDelay,ncol=2)
-g <- arrangeGrob(plotReg, plotDelay, ncol=2)
-# ggsave(file=paste0(plotPath,"sar10C60_hwHalflife_regDelay_halfday.pdf"),g, height=9,width=18)
-ggsave(file=paste0(plotPath,"C60_Pandejpong2012_hwHalflife_regDelay_halfday.pdf"),g, height=9,width=18)
-
-# Plot number of hand washing events per hour
-freq <- legendReg
-numReg <- as.data.frame(cbind(freq,count=num_hw_reg))
-numReg$count <- as.numeric(as.character(num_hw_reg))/(24*infPeriod)
-
-# numExp <- as.data.frame(cbind(freq,count=num_hw_exp))
-# numExp$count <- as.numeric(as.character(num_hw_exp))/(24*infPeriod)
-
-delay <- legendDelay
-numDel <- as.data.frame(cbind(freq=delay,count=num_hw_delay))
-numDel$count <- as.numeric(as.character(num_hw_delay))/(24*infPeriod)
-
-                        
-p1 <- ggplot(data=numReg, aes(x=reorder(freq,-as.numeric(count)),y=as.numeric(count))) +
-      geom_bar(stat="identity")+ 
-      xlab("Hand washing frequency (fixed)") + 
-      ylab("Average number of hand washes per hour") +
-      geom_text(aes(label=round(count,2)), vjust=0, color="black",size=3)
-# p2 <- ggplot(data=numExp, aes(x=reorder(freq,-as.numeric(count)),y=as.numeric(count))) +
-#       geom_bar(stat="identity")+ 
-#       xlab("Hand washing frequency (at random)") + 
-#       ylab("Average number of hand washes per hour")
-p3 <- ggplot(data=numDel, aes(x=reorder(freq,-as.numeric(count)),y=as.numeric(count))) +
-      geom_bar(stat="identity") + 
-      xlab("Delay between hand contamination and hand washing") + 
-      ylab("Average number of hand washes per hour")
-grid.arrange(p1,p3,ncol=2)
 
 
 
@@ -249,7 +178,7 @@ for(d in dc){
   pinf <- rep(0,num)
   texp <- v <- last_tc <- list()
   for(h in 1:num){
-    sim <- household.fun(t_end=24*infPeriod, HW=0, f_rate=11, eps=epsilon, halflife=d)
+    sim <- household.fun(t_end=infPeriod, HW=0, f_rate=11, eps=epsilon, halflife=d)
     pinf[h] <- sim$p_inf
     texp[[h]] <- sim$t_exp
     v[[h]] <- sim$v
@@ -307,7 +236,7 @@ dataSens %>% gather() %>% group_by(key) %>%
                        labels=c("Uniform","Exponential","Lognormal"))
 
 
-###############################
+# ====================================================================== #
 # Sensitivity analysis for different secondary attack rates
 epsMat <- sens.transPerContact.SAR(dc=seq(1,30)/60,infPeriod=12,c_mean=1,f_rate=10,
                                    sar_vec=c(0.15, 0.25, 0.5, 0.75))
@@ -317,6 +246,7 @@ plot.fun(epsMat,
          legend.title = "SAR", 
          legend.labels = c("15%","25%","50%","75%"))
 
+# ====================================================================== #
 # Sensitivity analysis for different rates of hand contamination events
 # SAR = 0.5 fixed
 epsMatC <- sens.transPerContact.cont(dc=seq(1,30)/60,infPeriod=12,c_mean=1,SAR=0.5,
