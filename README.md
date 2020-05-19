@@ -3,9 +3,9 @@ Thi Mui Pham<sup>1,2,*</sup>, Yin Mo<sup>1,3,4,5</sup>, Ben S. Cooper<sup>1,3</s
 
 <sup>1</sup> Centre for Tropical Medicine and Global Health, Nuffield Department of Medicine, University of Oxford, Oxford, United Kingdom <br>
 <sup>2</sup> Julius Center for Health Sciences and Primary Care of the UMC Utrecht, Utrecht University, Utrecht, The Netherlands;
-<sup>3</sup> Mahidol-Oxford Tropical Medicine Research Unit, Mahidol University, Bangkok, Thailand;
-<sup>4</sup> Division of Infectious Diseases, Department of Medicine, National University Hospital, Singapore;
-<sup>5</sup> Department of Medicine, National University of Singapore, Singapore
+<sup>3</sup> Mahidol-Oxford Tropical Medicine Research Unit, Mahidol University, Bangkok, Thailand <br>
+<sup>4</sup> Division of Infectious Diseases, Department of Medicine, National University Hospital, Singapore <br>
+<sup>5</sup> Department of Medicine, National University of Singapore, Singapore <br>
 <sup>*</sup> <t.m.pham-2@umcutrecht.nl>
 
 ## Abstract
