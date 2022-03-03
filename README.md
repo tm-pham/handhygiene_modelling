@@ -14,8 +14,6 @@ Increased hand hygiene amongst the general public has been widely promoted as on
 ## Model code
 The simulation code was built by Thi Mui Pham using R (version 4.0.1).
 
-The code is divided into several parts. Please find a short overview below.
-
 ### Most important functions
 
 handhygiene_functions.R: Functions to compute the probability of infection with respect to hand hygiene frequency/delay as a function of half-life of prob. of persistence 
