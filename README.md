@@ -19,10 +19,17 @@ The code is divided into several parts. Please find a short overview below.
 ### Most important functions
 
 handhygiene_functions.R: Functions to compute the probability of infection with respect to hand hygiene frequency/delay as a function of half-life of prob. of persistence 
+
 handhygiene_main.R: Main code to produce Figure 3 in main text of the manuscript
+
 handhygiene_fig4.R: Code to produce Figure 4 in main text of the manuscript
+
 handhygiene_figS1_halflife_CMI.R: Code to produce Figure S1
+
 handhygiene_num_time_hw.R: Code to produce Figure S2
+
 handhygiene_heatmap.R and handhygiene_plot_combine_heatmap.R: Code to produce Figure S20 and Figure S21
+
 handhygiene_plotting_functions.R: Functions for plotting
+
 
