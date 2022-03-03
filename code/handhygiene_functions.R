@@ -1,11 +1,8 @@
 # ============================================================================ #
-# Hand hygiene Covid-19 functions
+# Hand hygiene functions
 # ============================================================================ #
-# Packages
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(reshape)
+# Load packages
+source("handhygiene_packages.R")
 
 # ============================================================================ #
 # Generate times according to exponential distribution
@@ -57,7 +54,7 @@ lognormal.times <- function(t_end, c_mean, c_sd){
 }
 
 # ============================================================================ #
-# Household function
+# Compute cumulative probability of infection
 # =============================================================================#
 # ----------------------------------
 # Assumptions:
@@ -105,7 +102,7 @@ lognormal.times <- function(t_end, c_mean, c_sd){
 # OUTPUT
 # @return p_inf = cumulative probability of infection
 # ============================================================================ #
-household.fun <- function(t_end=24*1, 
+p.inf.fun <- function(t_end=24*1, 
                           CT = 2, c_mean=1, c_sd=1, halflife=1, 
                           f_rate=10, eps=0.01,
                           HW = 1, hw_mean=10/60, t_delay=5/60, e_HW=1,
@@ -314,14 +311,12 @@ sar.hw <- function(dc=seq(1,60)/60,
       for(s in seed:(seed+it-1)){
         eps <- compute.eps(t_end=24*infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=dc,SAR=SAR.nohw, seed=s)
         if(HW.opt%in%c(1,2)){
-          sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,hw_mean=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+          sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,hw_mean=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
           pinf[i,] <- sim$p_inf
           numHW[i] <- length(sim$t_HW)
         }else{
-          sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,t_delay=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+          sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,t_delay=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
           pinf[i,] <- sim$p_inf
-          # print(paste0("seed=",s))
-          # print(paste0("pinf=",pinf[i]))
           numHW[i] <- length(sim$t_HW)
         }
         i <- i + 1
@@ -342,11 +337,11 @@ sar.hw <- function(dc=seq(1,60)/60,
         for(s in seed:(seed+it-1)){
           eps <- compute.eps(t_end=24*infPeriod,c_mean=c_mean[i_c],f_rate=f_rate,halflife=dc,SAR=SAR.nohw, seed=s)
           if(HW.opt%in%c(1,2)){
-            sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,hw_mean=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+            sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,hw_mean=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
             pinf[i,] <- sim$p_inf
             numHW[i] <- length(sim$t_HW)
           }else{
-            sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,t_delay=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+            sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,t_delay=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
             pinf[i,] <- sim$p_inf
             numHW[i] <- length(sim$t_HW)
           }
@@ -400,89 +395,6 @@ sens.transPerContact.cont <- function(dc=seq(1,30)/60,infPeriod=12,c_mean=1,SAR=
   rownames(epsMatC) <- 1:nrow(epsMatC)
   
   return(epsMatC)
-}
-
-
-# ============================================================================ #
-# Plot function
-# ============================================================================ #
-plot.fun <- function(df, SAR.nohw = NULL, x.title, y.title, legend.title, legend.labels, 
-                     axis.title.x.size=25, axis.title.y.size=25, 
-                     axis.text.x.size=22, axis.text.y.size=22,
-                     legend.text.size=18, legend.title.size=20, legend.position = "right",
-                     line.size=1.25){
-
-  p <- df %>% gather() %>% group_by(key) %>% 
-    mutate(x=1:n()) %>%
-    ggplot(aes(x=x, y=value,group=key,color=key)) + 
-    geom_line(size=line.size) +
-    xlab(x.title) + 
-    ylab(y.title) + 
-    theme_bw()+
-    theme(axis.title.x = element_text(size=axis.title.x.size),
-          axis.title.y = element_text(size=axis.title.y.size),
-          axis.text.x = element_text(size=axis.text.x.size),
-          axis.text.y = element_text(size=axis.text.y.size),
-          legend.text = element_text(size=legend.text.size),
-          legend.title = element_text(size=legend.title.size),
-          legend.position = legend.position)
-  if(!is.null(SAR.nohw)){
-    grob <- grobTree(textGrob("No Hand Washing", x=0.66,  y=0.97, hjust=0,
-                              gp=gpar(col="black", fontsize=22, fontface="italic")))
-    p <- p + geom_hline(yintercept = SAR.nohw, linetype="solid", color="black", size=line.size) + annotation_custom(grob) 
-  }
-  return(p)
-}
-
-
-plot.compare <- function(df1,df2,col1,col2,freq=seq(1,60), SAR.nohw = NULL, 
-                         x.title="", y.title="Probability of infection", 
-                         legend.title, legend.labels, 
-                         axis.title.x.size=20, axis.title.y.size=20, 
-                         axis.text.x.size=18, axis.text.y.size=18,
-                         legend.text.size=16, legend.title.size=18, legend.position = "right",
-                         line.size=1.25, point.size=1.25, points=FALSE){
-  
-  dR1 <- as.data.frame(cbind(freq=freq,df1))
-  dD1 <- as.data.frame(cbind(freq=freq,df2))
-  dDR1 <- merge(dR1, dD1, by="freq")
-  dMelted1 <- reshape::melt(dDR1, id.var='freq')
-  if(points){
-    pc <- ggplot(dMelted1, aes(x=freq, y=value, col=variable)) + 
-      geom_point(size=point.size) + 
-      geom_line(size=line.size) +
-      xlab(x.title) + 
-      ylab(y.title) + 
-      theme_bw() +
-      theme(axis.title.x = element_text(size=axis.title.x.size),
-            axis.title.y = element_text(size=axis.title.y.size),
-            axis.text.x = element_text(size=axis.text.x.size),
-            axis.text.y = element_text(size=axis.text.y.size),
-            legend.text = element_text(size=legend.text.size),
-            legend.title = element_text(size=legend.title.size),
-            legend.position = legend.position) +
-      scale_color_manual(values=c(col1,col2),
-                         labels=legend.labels,
-                         name=legend.title) 
-  }else{
-    pc <- ggplot(dMelted1, aes(x=freq, y=value, col=variable)) + 
-      geom_line(size=line.size) +
-      xlab(x.title) + 
-      ylab(y.title) + 
-      theme_bw() +
-      theme(axis.title.x = element_text(size=axis.title.x.size),
-            axis.title.y = element_text(size=axis.title.y.size),
-            axis.text.x = element_text(size=axis.text.x.size),
-            axis.text.y = element_text(size=axis.text.y.size),
-            legend.text = element_text(size=legend.text.size),
-            legend.title = element_text(size=legend.title.size),
-            legend.position = legend.position) +
-      scale_color_manual(values=c(col1,col2),
-                         labels=legend.labels,
-                         name=legend.title) 
-  }
-
-  return(pc)
 }
 
 

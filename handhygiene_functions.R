@@ -1,11 +1,8 @@
 # ============================================================================ #
-# Hand hygiene Covid-19 functions
+# Hand hygiene functions
 # ============================================================================ #
-# Packages
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(reshape)
+# Load packages
+source("handhygiene_packages.R")
 
 # ============================================================================ #
 # Generate times according to exponential distribution
@@ -57,7 +54,7 @@ lognormal.times <- function(t_end, c_mean, c_sd){
 }
 
 # ============================================================================ #
-# Household function
+# Compute cumulative probability of infection
 # =============================================================================#
 # ----------------------------------
 # Assumptions:
@@ -105,7 +102,7 @@ lognormal.times <- function(t_end, c_mean, c_sd){
 # OUTPUT
 # @return p_inf = cumulative probability of infection
 # ============================================================================ #
-household.fun <- function(t_end=24*1, 
+p.inf.fun <- function(t_end=24*1, 
                           CT = 2, c_mean=1, c_sd=1, halflife=1, 
                           f_rate=10, eps=0.01,
                           HW = 1, hw_mean=10/60, t_delay=5/60, e_HW=1,
@@ -314,11 +311,11 @@ sar.hw <- function(dc=seq(1,60)/60,
       for(s in seed:(seed+it-1)){
         eps <- compute.eps(t_end=24*infPeriod,c_mean=c_mean,f_rate=f_rate,halflife=dc,SAR=SAR.nohw, seed=s)
         if(HW.opt%in%c(1,2)){
-          sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,hw_mean=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+          sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,hw_mean=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
           pinf[i,] <- sim$p_inf
           numHW[i] <- length(sim$t_HW)
         }else{
-          sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,t_delay=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+          sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean,HW=HW.opt,t_delay=hw[h],f_rate=f_rate,eps=eps,halflife=dc,seed=s)
           pinf[i,] <- sim$p_inf
           # print(paste0("seed=",s))
           # print(paste0("pinf=",pinf[i]))
@@ -342,11 +339,11 @@ sar.hw <- function(dc=seq(1,60)/60,
         for(s in seed:(seed+it-1)){
           eps <- compute.eps(t_end=24*infPeriod,c_mean=c_mean[i_c],f_rate=f_rate,halflife=dc,SAR=SAR.nohw, seed=s)
           if(HW.opt%in%c(1,2)){
-            sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,hw_mean=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+            sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,hw_mean=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
             pinf[i,] <- sim$p_inf
             numHW[i] <- length(sim$t_HW)
           }else{
-            sim <- household.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,t_delay=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
+            sim <- p.inf.fun(t_end=24*infPeriod,CT=CT,c_mean=c_mean[i_c],HW=HW.opt,t_delay=hw,f_rate=f_rate,eps=eps,halflife=dc,seed=s)
             pinf[i,] <- sim$p_inf
             numHW[i] <- length(sim$t_HW)
           }
